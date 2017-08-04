@@ -4,6 +4,7 @@ require 'rack'
 require 'rack/server'
 
 OK = 200
+NOT_FOUND = 404
 BAD_REQUEST = 400
 TEXT_PLAIN = { "Content-Type" => "text/plain" }
 
@@ -27,8 +28,9 @@ class Awelchy
     terms = body.split
     awelchisms = Awelchy.awelchisms
     weighed_awelchisms = Awelchy.weigh_urls(terms, awelchisms)
-    heaviest_awelchism = Awelchy.heaviest_url(weighed_awelchisms)
-    return [OK, TEXT_PLAIN, [heaviest_awelchism]]
+    url = Awelchy.heaviest_url(weighed_awelchisms)
+    return [OK, TEXT_PLAIN, [url]] if url
+    return [NOT_FOUND, TEXT_PLAIN, []]
   end
 
   def self.weigh_urls(terms, urls)
@@ -42,7 +44,8 @@ class Awelchy
   end
 
   def self.heaviest_url(weighed_urls)
-    weighed_urls.sort_by { |k| k[:weight] }.last[:url]
+    heaviest = weighed_urls.sort_by { |k| k[:weight] }.last
+    heaviest[:weight] > 0 ? heaviest[:url] : nil
   end
 
   def self.awelchisms
