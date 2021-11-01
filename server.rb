@@ -1,7 +1,6 @@
 require 'net/http'
 require 'nokogiri'
 require 'rack'
-require 'rack/server'
 
 OK = 200
 NOT_FOUND = 404
@@ -70,5 +69,3 @@ class Awelchy
     doc.search('img').map { |img| img.attributes['src'].value }
   end
 end
-
-Rack::Server.start :app => Awelchy

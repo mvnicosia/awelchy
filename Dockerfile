@@ -2,8 +2,9 @@ FROM ruby:3.0.2
 LABEL maintainer "mvnicosia@gmail.com"
 
 RUN gem install bundler
-COPY * ./
+COPY . /
 RUN bundle install
 
-EXPOSE 9292
-CMD rackup server.rb
+ENV PORT=8080
+EXPOSE $PORT
+CMD bundle exec puma -C config/puma.rb
