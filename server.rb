@@ -1,5 +1,6 @@
 require 'net/http'
 require 'nokogiri'
+require 'json'
 require 'rack'
 
 OK = 200
@@ -30,7 +31,7 @@ class Awelchy
       return [OK, TEXT_HTML, [USAGE]]
     end
     if req.post?
-      return Awelchy.fuzzy_match(req) if Awelchy.is_fuzzy_match?(path_info)
+      return Awelchy.fuzzy_match(JSON.parse(req.body.read)) if Awelchy.is_fuzzy_match?(path_info)
     end
     return [BAD_REQUEST, TEXT_PLAIN, ['Unsupported request.']]
   end
@@ -39,9 +40,8 @@ class Awelchy
     path_info == "/fuzzy-match"
   end
 
-  def self.fuzzy_match(req)
-    body = req.body.read
-    terms = body.split
+  def self.fuzzy_match(json)
+    terms = json["message"]["text"].split
     awelchisms = Awelchy.awelchisms
     weighed_awelchisms = Awelchy.weigh_urls(terms, awelchisms)
     url = Awelchy.heaviest_url(weighed_awelchisms)
