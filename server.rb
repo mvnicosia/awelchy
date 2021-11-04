@@ -32,7 +32,7 @@ class Awelchy
   DOC
 
   def self.call(env)
-    req = Rack::Request.new env
+    req = Rack::Request.new(env)
     path = req.env["PATH_INFO"]
     if req.get? && Awelchy.is_base?(path)
       return [HttpStatus::OK, ContentType::TEXT_HTML, [USAGE]]
@@ -41,7 +41,9 @@ class Awelchy
       return [HttpStatus::OK, ContentType::FAVICON, [Awelchy.favicon]]
     end
     if req.post? && Awelchy.is_fuzzy_match?(path)
-      return Awelchy.fuzzy_match(JSON.parse(req.body.read))
+      body = req.body.read
+      puts body
+      return Awelchy.fuzzy_match(JSON.parse(body))
     end
     return [HttpStatus::BAD_REQUEST, ContentType::TEXT_PLAIN, ['Unsupported request.']]
   end
