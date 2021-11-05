@@ -2,6 +2,7 @@ require 'net/http'
 require 'nokogiri'
 require 'json'
 require 'rack'
+require 'uri'
 
 class HttpStatus
   OK = 200
@@ -42,6 +43,7 @@ class Awelchy
     end
     if req.post? && Awelchy.is_fuzzy_match?(path)
       body = req.body.read
+      puts req.env
       puts body
       return Awelchy.fuzzy_match(JSON.parse(body))
     end
