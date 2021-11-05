@@ -11,9 +11,35 @@ class HttpStatus
 end
 
 class ContentType
+
+  APP_JSON = { "Content-Type" => "application/json" }
   FAVICON = { "Content-Type" => "image/vnd.microsoft.icon" }
   TEXT_HTML = { "Content-Type" => "text/html; charset=utf-8" }
   TEXT_PLAIN = { "Content-Type" => "text/plain" }
+
+  def self.is_urlencoded?(req)
+    req.env["CONTENT_TYPE"] == "application/x-www-form-urlencoded"
+  end
+end
+
+class Content
+
+  def self.decode_urlencoded(req)
+    body = req.body.read
+    puts body
+    ary = URI.decode_www_form(body)
+    puts ary
+    req_hash = Hash[ary]
+    puts req_hash
+    return req_hash
+  end
+
+  def self.slackbot_format(text)
+    JSON.generate({
+      "response_type": "in_channel",
+      "text": text
+    })
+  end
 end
 
 class Awelchy
@@ -41,11 +67,12 @@ class Awelchy
     if req.get? && Awelchy.is_favicon?(path)
       return [HttpStatus::OK, ContentType::FAVICON, [Awelchy.favicon]]
     end
-    if req.post? && Awelchy.is_fuzzy_match?(path)
-      body = req.body.read
-      puts req.env
-      puts body
-      return Awelchy.fuzzy_match(JSON.parse(body))
+    if req.post? && Awelchy.is_fuzzy_match?(path) && ContentType.is_urlencoded?(req) 
+      return [
+        HttpStatus::OK,
+        ContentType::APP_JSON,
+        [Content.slackbot_format(Awelchy.fuzzy_match(Content.decode_urlencoded(req)))]
+      ]
     end
     return [HttpStatus::BAD_REQUEST, ContentType::TEXT_PLAIN, ['Unsupported request.']]
   end
@@ -68,13 +95,12 @@ class Awelchy
     end
   end
 
-  def self.fuzzy_match(json)
-    terms = json["message"]["text"].split
+  def self.fuzzy_match(req_hash)
+    terms = req_hash["text"].split
     awelchisms = Awelchy.awelchisms
     weighed_awelchisms = Awelchy.weigh_urls(terms, awelchisms)
     url = Awelchy.heaviest_url(weighed_awelchisms)
-    return [HttpStatus::OK, ContentType::TEXT_PLAIN, [url]] if url
-    return [HttpStatus::NOT_FOUND, ContentType::TEXT_PLAIN, []]
+    return url
   end
 
   def self.weigh_urls(terms, urls)
