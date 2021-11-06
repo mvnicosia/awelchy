@@ -50,10 +50,14 @@ class Awelchy
       <h1>Usage:</h1>
       <pre>
         POST /fuzzy-match
-        &lt; keywords &gt;
+        &lt; text=some+keywords+urlencoded &gt;
       </pre>
       <h1>Returns:</h1>
-      <p>URL to matching image on awelchisms.com</p>
+      <p>JSON object containing:</p>
+      <ul>
+        <li>"response_type": "in_channel"</li>
+        <li>"text": URL to matching image on awelchisms.com</li>
+      </ul>
     </body>
   </html>
   DOC
